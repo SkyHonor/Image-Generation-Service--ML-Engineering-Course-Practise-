@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # 1. Сервис приложения
+  app:
+    build: ./app                   # Ищет Dockerfile в папке app/
+    env_file:                      
+      - ./app/.env                 # Ищет .env внутри папки app/ (как на скрине!)
+    volumes:                       
+      - ./app/src:/app/src         # Прокидывает исходные файлы (папку src) внутрь контейнера
+    restart: always
+
+  # 2. Сервис веб-прокси
+  web-proxy:
+    build: ./web-proxy             # Ищет Dockerfile в папке web-proxy/ (как на скрине!)
+    ports:                         
+      - "80:80"
+      - "443:443"
+    depends_on:                    
+      - app
+
+  # 3. Сервис брокера сообщений RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management   
+    restart: on-failure            
+    ports:                         
+      - "5672:5672"                
+      - "15672:15672"              
+    volumes:                       
+      - ./rabbitmq_data:/var/lib/rabbitmq  # Сохранение очереди на жесткий диск
+
+  # 4. Сервис базы данных PostgreSQL
+  database:
+    image: postgres:15             
+    environment:                   
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    volumes:                       
+      - ./postgres_data:/var/lib/postgresql/data # Сохранение БД на жесткий диск
