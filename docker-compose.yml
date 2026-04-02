@@ -5,14 +5,14 @@ services:
   app:
     build: ./app                   # Ищет Dockerfile в папке app/
     env_file:                      
-      - ./app/.env                 # Ищет .env внутри папки app/ (как на скрине!)
+      - ./app/.env                 # Ищет .env внутри папки app/
     volumes:                       
       - ./app/src:/app/src         # Прокидывает исходные файлы (папку src) внутрь контейнера
     restart: always
 
   # 2. Сервис веб-прокси
   web-proxy:
-    build: ./web-proxy             # Ищет Dockerfile в папке web-proxy/ (как на скрине!)
+    build: ./web-proxy             # Ищет Dockerfile в папке web-proxy/
     ports:                         
       - "80:80"
       - "443:443"
@@ -27,7 +27,7 @@ services:
       - "5672:5672"                
       - "15672:15672"              
     volumes:                       
-      - ./rabbitmq_data:/var/lib/rabbitmq  # Сохранение очереди на жесткий диск
+      - rabbitmq_data:/var/lib/rabbitmq  # Исправлено
 
   # 4. Сервис базы данных PostgreSQL
   database:
@@ -37,4 +37,8 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: mydatabase
     volumes:                       
-      - ./postgres_data:/var/lib/postgresql/data # Сохранение БД на жесткий диск
+      - postgresql_data:/var/lib/postgresql/data # Исправлено
+
+volumes:
+  postgresql_data:
+  rabbitmq_data:
