@@ -1,5 +1,6 @@
 from database import engine, SessionLocal
-from models import Base, User, BillingAccount, MLModel
+from models import Base, User, BillingAccount, MLModel, Transaction, TransactionType
+from security import get_password_hash
 
 def run_init():
     #Создание таблицы в Postgres
@@ -16,13 +17,25 @@ def run_init():
         if not exists:
             print("Создаём данные...")
             #Создание пользователя
-            admin = User(username="admin", email=admin_email)
+            admin = User(
+                username="admin",
+                email=admin_email,
+                password_hash=get_password_hash("secret_admin_password")
+            )
             db.add(admin)
             db.flush()
 
             #Создание кошелька админа
             admin_billing = BillingAccount(user_id=admin.id, balance=100)
             db.add(admin_billing)
+
+            # Первая транзакция (начальный капитал)
+            init_tx = Transaction(
+                user_id=admin.id, 
+                amount=100, 
+                transaction_type=TransactionType.DEPOSIT
+            )
+            db.add(init_tx)
 
             #Создание базовых моделей
             gemini = MLModel(name="Google Nano Banana", api_key="gemini-key-123") #Здесь будет API ключ
