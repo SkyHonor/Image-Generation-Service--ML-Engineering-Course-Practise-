@@ -1,6 +1,6 @@
-from database import engine, SessionLocal
+from database.session import engine, SessionLocal 
 from models import Base, User, BillingAccount, MLModel, Transaction, TransactionType
-from security import get_password_hash
+from core.security import get_password_hash
 
 def run_init():
     #Создание таблицы в Postgres

@@ -9,6 +9,11 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
+# Схема для логина
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
 class UserRead(BaseModel):
     id: str
     username: str
