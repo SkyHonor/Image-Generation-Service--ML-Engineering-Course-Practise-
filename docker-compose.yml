@@ -5,7 +5,10 @@ services:
   app:
     build: ./app                   # Ищет Dockerfile в папке app/
     env_file:                      
-      - ./app/.env                 # Ищет .env внутри папки app/
+      - ./.env                 # Ищет .env внутри корня
+    environment:                
+      - DB_HOST=database
+      - RABBITMQ_HOST=rabbitmq
     volumes:                       
       - ./app/src:/app/src         # Прокидывает исходные файлы (папку src) внутрь контейнера
     restart: always
@@ -27,7 +30,7 @@ services:
       - "5672:5672"                
       - "15672:15672"              
     volumes:                       
-      - rabbitmq_data:/var/lib/rabbitmq  # Исправлено
+      - rabbitmq_data:/var/lib/rabbitmq 
 
   # 4. Сервис базы данных PostgreSQL
   database:
@@ -40,7 +43,23 @@ services:
       - "5432:5432"
 
     volumes:                       
-      - postgresql_data:/var/lib/postgresql/data # Исправлено
+      - postgresql_data:/var/lib/postgresql/data
+
+  worker:
+    build: ./app
+    command: python src/worker.py
+    env_file:
+      - ./.env
+    environment:
+      - DB_HOST=database       
+      - RABBITMQ_HOST=rabbitmq
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./app/src:/app/src
+    depends_on:
+      - database
+      - rabbitmq
+    restart: always
 
 volumes:
   postgresql_data:
