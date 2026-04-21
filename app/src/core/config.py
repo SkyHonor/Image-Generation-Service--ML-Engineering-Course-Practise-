@@ -5,8 +5,13 @@ load_dotenv()
 
 class Settings:
     PROJECT_NAME: str = "ML Image Generation Service"
-    
     PREDICTION_COST: int = 10
+
+    # Константа для очереди
+    RABBITMQ_QUEUE_NAME: str = "ml_tasks"
+    
+    # Ключ для Google
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     
     # Генерация случайного секретного ключа для подписи токенов
     SECRET_KEY: str = os.getenv("SECRET_KEY", "7d92f587a8b38d389c8a8d1e3d3b3c3")

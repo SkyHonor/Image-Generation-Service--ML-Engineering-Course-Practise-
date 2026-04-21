@@ -31,7 +31,6 @@ class DepositRequest(BaseModel):
 
 # Схемы для ML задач
 class PredictionRequest(BaseModel):
-    user_id: str
     model_name: str
     prompt: str
 

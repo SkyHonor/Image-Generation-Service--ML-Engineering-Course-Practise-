@@ -24,3 +24,14 @@ def spend_credits_for_predict(db: Session, user_id: str):
         db.commit()
         return True
     return False
+
+def refund_credits(db: Session, user_id: str, amount: int):
+    """Возврат средств в случае ошибки ML или RabbitMQ"""
+    billing = db.query(BillingAccount).filter(BillingAccount.user_id == user_id).first()
+    if billing:
+        billing.balance += amount
+        # Записываем в транзакции, что это возврат (DEPOSIT)
+        db.add(Transaction(user_id=user_id, amount=amount, transaction_type=TransactionType.DEPOSIT))
+        db.commit()
+        return True
+    return False
