@@ -27,6 +27,7 @@ def callback(ch, method, properties, body):
 
         if not task_id or not raw_prompt:
             print(" [x] Ошибка: Неверный формат сообщения")
+            ch.basic_ack(delivery_tag=method.delivery_tag)            
             return
 
         print(f" [worker] Взял задачу: {task_id}. Промпт: '{raw_prompt}'")
