@@ -36,9 +36,9 @@
 </div>
 
 <script>
-    // Проверяем, может мы уже авторизованы?
-    if (localStorage.getItem("token")) {
-        window.location.href = "/dashboard.html";
+    // Проверяем, может мы уже авторизованы? Ищем куку access_token
+    if (document.cookie.includes("access_token=")) {
+        window.location.href = "/dashboard";
     }
 
     // Логика нажатия на кнопку "Войти"
@@ -49,7 +49,7 @@
         const password = document.getElementById("password").value;
         const errorAlert = document.getElementById("error-alert");
 
-        // Формируем данные как обычную HTML форму (так ждет наш OAuth2)
+        // Формируем данные как обычную HTML форму (так ждет наш FastAPI OAuth2)
         const formData = new URLSearchParams();
         formData.append("username", email);
         formData.append("password", password);
@@ -64,10 +64,10 @@
 
             if (response.ok) {
                 const data = await response.json();
-                // СОХРАНЯЕМ ТОКЕН В БРАУЗЕРЕ!
-                localStorage.setItem("token", data.access_token);
-                // Перекидываем в личный кабинет
-                window.location.href = "/dashboard.html";
+                
+                document.cookie = `access_token=${data.access_token}; path=/; max-age=1800`;
+                
+                window.location.href = "/dashboard";
             } else {
                 errorAlert.textContent = "Неверный логин или пароль!";
                 errorAlert.classList.remove("d-none");

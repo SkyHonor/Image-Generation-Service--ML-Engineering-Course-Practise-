@@ -2,36 +2,28 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Личный кабинет сервиса</title>
+    <title>Личный кабинет - Nano Banana</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #f4f6f9; padding-top: 20px; }
-        .card { box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .img-preview { max-width: 100%; border-radius: 8px; margin-top: 10px; }
-    </style>
+    <style>body { background-color: #f4f6f9; padding-top: 20px; } .card { margin-bottom: 20px; } .img-preview { max-width: 100%; border-radius: 8px; margin-top: 10px; }</style>
 </head>
 <body>
-
 <div class="container">
-    <!-- Шапка -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>🍌 Личный кабинет</h2>
+        <!-- Jinja подставит имя юзера прямо при загрузке -->
+        <h2>🍌 Привет, {{ user.username }}!</h2> 
         <button class="btn btn-outline-danger" onclick="logout()">Выйти</button>
     </div>
 
-    <!-- Уведомления об ошибках -->
     <div id="alert-box" class="alert d-none" role="alert"></div>
 
     <div class="row">
-        <!-- Левая колонка: Баланс и Генерация -->
+        <!-- Левая колонка -->
         <div class="col-md-5">
-            
-            <!-- Карточка баланса -->
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Ваш баланс</h5>
-                    <h2 class="text-success"><span id="balance-display">...</span> 🪙</h2>
+                    <!-- Jinja подставит баланс без JS-запросов -->
+                    <h2 class="text-success"><span id="balance-display">{{ balance }}</span> 🪙</h2>
                     <hr>
                     <div class="input-group mt-3">
                         <input type="number" id="deposit-amount" class="form-control" placeholder="Сумма" value="50">
@@ -40,188 +32,119 @@
                 </div>
             </div>
 
-            <!-- Форма генерации -->
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Создать картинку</h5>
                     <p class="text-muted small">Стоимость: 10 🪙</p>
                     <div class="mb-3">
-                        <label class="form-label">Модель</label>
                         <select id="model-select" class="form-select">
-                            <option value="Nano Banana 2">Nano Banana 2 (Gemini 3.1 Flash)</option>
+                            <option value="Nano Banana 2">Nano Banana 2</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Промпт (описание)</label>
-                        <textarea id="prompt-input" class="form-control" rows="3" placeholder="A futuristic cyberpunk city at night..."></textarea>
+                        <textarea id="prompt-input" class="form-control" rows="3" placeholder="A futuristic cyberpunk city..."></textarea>
                     </div>
                     <button class="btn btn-primary w-100" onclick="generateImage()">Сгенерировать</button>
                 </div>
             </div>
         </div>
 
-        <!-- Правая колонка: История -->
+        <!-- Правая колонка: История ML и ТРАНЗАКЦИИ (Замечание Альбины) -->
         <div class="col-md-7">
+            <!-- История ML Задач -->
             <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title">История задач</h5>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="loadHistory()">Обновить</button>
-                    </div>
+                    <h5 class="card-title">История задач</h5>
                     <hr>
                     <div id="history-container">
-                        <!-- Сюда JS будет вставлять карточки задач -->
-                        <p class="text-muted">Загрузка...</p>
+                        {% if not tasks %}
+                            <p class="text-muted">У вас пока нет задач.</p>
+                        {% endif %}
+                        
+                        <!-- Jinja цикл: собираем карточки на сервере -->
+                        {% for task in tasks|sort(attribute='created_at', reverse=True) %}
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <h6>{{ task.model_name }} 
+                                    <span class="badge bg-secondary float-end">{{ task.status.value }}</span>
+                                </h6>
+                                <p class="small text-muted mb-1">{{ task.prompt }}</p>
+                                {% if task.image_url %}
+                                    <img src="{{ task.image_url }}" class="img-preview">
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
+
+            <!-- ИСТОРИЯ ТРАНЗАКЦИЙ (Добавлено для Альбины) -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">История транзакций</h5>
+                    <hr>
+                    <ul class="list-group">
+                        {% for tx in transactions|sort(attribute='created_at', reverse=True) %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                {% if tx.transaction_type.value == 'deposit' %}
+                                    🟢 Пополнение
+                                {% else %}
+                                    🔴 Списание
+                                {% endif %}
+                                <small class="text-muted ms-2">{{ tx.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </span>
+                            <span class="badge bg-primary rounded-pill">{{ tx.amount }} 🪙</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
 <script>
-    // 1. ПРОВЕРКА АВТОРИЗАЦИИ
-    const token = localStorage.getItem("token");
-    if (!token) {
-        window.location.href = "/"; // Если нет токена, выкидываем на логин
-    }
-
-    // Универсальные заголовки для API-запросов (подкладываем токен)
-    const apiHeaders = {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-    };
-
+    // JS функции для действий пользователя
     function logout() {
-        localStorage.removeItem("token");
+        document.cookie = "access_token=; Max-Age=0; path=/;"; // Удаляем куку
         window.location.href = "/";
     }
 
     function showAlert(message, type="danger") {
-        const alertBox = document.getElementById("alert-box");
-        alertBox.className = `alert alert-${type}`;
-        alertBox.textContent = message;
-        setTimeout(() => alertBox.classList.add("d-none"), 5000);
+        const box = document.getElementById("alert-box");
+        box.className = `alert alert-${type}`;
+        box.textContent = message;
+        setTimeout(() => box.classList.add("d-none"), 5000);
     }
 
-    // 2. ЗАГРУЗКА БАЛАНСА
-    async function loadBalance() {
-        try {
-            const response = await fetch("/balance/", { headers: apiHeaders });
-            if (response.status === 401) return logout(); // Токен протух
-            const data = await response.json();
-            document.getElementById("balance-display").innerText = data.balance;
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    // 3. ПОПОЛНЕНИЕ БАЛАНСА
     async function deposit() {
         const amount = document.getElementById("deposit-amount").value;
-        if (!amount || amount <= 0) return showAlert("Введите корректную сумму");
-
-        try {
-            const response = await fetch(`/balance/deposit?amount=${amount}`, { 
-                method: "POST", 
-                headers: apiHeaders 
-            });
-            if (response.ok) {
-                showAlert(`Успешно пополнено на ${amount} 🪙`, "success");
-                loadBalance();
-            } else {
-                showAlert("Ошибка пополнения");
-            }
-        } catch (e) {
-            showAlert("Ошибка сервера");
-        }
+        const res = await fetch(`/balance/deposit?amount=${amount}`, { method: "POST" });
+        if (res.ok) window.location.reload(); // Jinja сама обновит все данные при перезагрузке!
+        else showAlert("Ошибка пополнения");
     }
 
-    // 4. ОТПРАВКА ЗАПРОСА В ML
     async function generateImage() {
         const prompt = document.getElementById("prompt-input").value;
         const modelName = document.getElementById("model-select").value;
+        if (!prompt) return showAlert("Введите промпт");
 
-        if (!prompt) return showAlert("Введите описание картинки!");
-
-        try {
-            const response = await fetch("/predict/", {
-                method: "POST",
-                headers: apiHeaders,
-                body: JSON.stringify({ prompt: prompt, model_name: modelName })
-            });
-
-            if (response.ok) {
-                showAlert("Задача отправлена в очередь!", "success");
-                document.getElementById("prompt-input").value = "";
-                loadBalance(); // Деньги списались, обновляем
-                loadHistory(); // Обновляем историю
-            } else if (response.status === 402) {
-                showAlert("Недостаточно средств на балансе!");
-            } else {
-                const errData = await response.json();
-                showAlert(`Ошибка: ${JSON.stringify(errData)}`);
-            }
-        } catch (e) {
-            showAlert("Сервер недоступен");
+        const res = await fetch("/predict/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: prompt, model_name: modelName })
+        });
+        
+        if (res.ok) {
+            showAlert("Задача отправлена! Страница обновится через 15 секунд...", "success");
+            setTimeout(() => window.location.reload(), 15000); // Перезагрузим, чтобы Jinja отрисовала картинку
+        } else if (res.status === 402) {
+            showAlert("Недостаточно средств!");
         }
     }
-
-    // 5. ИСТОРИЯ И ОТОБРАЖЕНИЕ РЕЗУЛЬТАТОВ
-    async function loadHistory() {
-        try {
-            const response = await fetch("/history/tasks", { headers: apiHeaders });
-            if (response.ok) {
-                const tasks = await response.json();
-                const container = document.getElementById("history-container");
-                container.innerHTML = "";
-
-                if (tasks.length === 0) {
-                    container.innerHTML = '<p class="text-muted">У вас пока нет задач.</p>';
-                    return;
-                }
-
-                // Выводим задачи (новые сверху)
-                tasks.forEach(task => {
-                    let statusBadge = '';
-                    if (task.status === 'completed') statusBadge = '<span class="badge bg-success">Готово</span>';
-                    else if (task.status === 'processing') statusBadge = '<span class="badge bg-warning text-dark">В процессе</span>';
-                    else if (task.status === 'failed') statusBadge = '<span class="badge bg-danger">Ошибка</span>';
-                    else statusBadge = '<span class="badge bg-secondary">В очереди</span>';
-
-                    let imageHtml = '';
-                    if (task.status === 'completed' && task.image_url) {
-                        imageHtml = `<img src="${task.image_url}" class="img-preview" alt="Generated image">`;
-                    }
-
-                    const card = `
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <h6 class="card-title">${task.model_name}</h6>
-                                    ${statusBadge}
-                                </div>
-                                <p class="card-text small text-muted mb-1">Промпт: ${task.prompt}</p>
-                                <p class="card-text small text-muted mb-2">Дата: ${new Date(task.created_at).toLocaleString()}</p>
-                                ${imageHtml}
-                            </div>
-                        </div>
-                    `;
-                    container.innerHTML += card;
-                });
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    // При старте страницы загружаем данные
-    loadBalance();
-    loadHistory();
-
-    // Автоматически обновлять историю каждые 5 секунд (чтобы увидеть готовую картинку)
-    setInterval(loadHistory, 5000);
-
 </script>
 </body>
 </html>
