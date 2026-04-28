@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from models.user import User
-from models.billing import BillingAccount
+from models.billing import BillingAccount, Transaction, TransactionType
 from core.security import get_password_hash, verify_password
 import schemas
 
@@ -10,9 +10,18 @@ def create_user(db: Session, user_data: schemas.UserCreate):
     db.add(new_user)
     db.flush()
     
-    # Создаем кошелек сразу
+    # Создаем кошелек (стартовые 10 кредитов)
     new_billing = BillingAccount(user_id=new_user.id, balance=10)
     db.add(new_billing)
+    
+    # Фиксируем стартовый бонус в истории транзакций
+    bonus_tx = Transaction(
+        user_id=new_user.id, 
+        amount=10, 
+        transaction_type=TransactionType.DEPOSIT
+    )
+    db.add(bonus_tx)
+    
     db.commit()
     return new_user
 
