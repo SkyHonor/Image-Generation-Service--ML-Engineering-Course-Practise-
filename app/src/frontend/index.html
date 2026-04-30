@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Image Generator - Вход</title>
+    <!-- Подключаем красивый дизайн Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .auth-container { max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="auth-container text-center">
+        <h2 class="mb-4">🍌 AI-Image</h2>
+        <p class="text-muted">Генерация картинок при помощи моделей Google</p>
+
+        <!-- Блок отображения ошибок -->
+        <div id="error-alert" class="alert alert-danger d-none" role="alert"></div>
+
+        <!-- Форма Входа -->
+        <form id="login-form">
+            <div class="mb-3">
+                <input type="email" id="email" class="form-control" placeholder="Email" required>
+            </div>
+            <div class="mb-3">
+                <input type="password" id="password" class="form-control" placeholder="Пароль" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mb-2">Войти</button>
+            <button type="button" class="btn btn-outline-secondary w-100" onclick="alert('Регистрацию добавим чуть позже!')">Регистрация</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Проверяем, может мы уже авторизованы? Ищем куку access_token
+    if (document.cookie.includes("access_token=")) {
+        window.location.href = "/dashboard";
+    }
+
+    // Логика нажатия на кнопку "Войти"
+    document.getElementById("login-form").addEventListener("submit", async function(e) {
+        e.preventDefault(); // Останавливаем перезагрузку страницы
+        
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const errorAlert = document.getElementById("error-alert");
+
+        // Формируем данные как обычную HTML форму (так ждет наш FastAPI OAuth2)
+        const formData = new URLSearchParams();
+        formData.append("username", email);
+        formData.append("password", password);
+
+        try {
+            // Стучимся в твой FastAPI (эндпоинт логина)
+            const response = await fetch("/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                document.cookie = `access_token=${data.access_token}; path=/; max-age=1800`;
+                
+                window.location.href = "/dashboard";
+            } else {
+                errorAlert.textContent = "Неверный логин или пароль!";
+                errorAlert.classList.remove("d-none");
+            }
+        } catch (error) {
+            errorAlert.textContent = "Ошибка подключения к серверу";
+            errorAlert.classList.remove("d-none");
+        }
+    });
+</script>
+
+</body>
+</html>

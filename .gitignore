@@ -1,0 +1,30 @@
+# Виртуальное окружение
+venv/
+.venv/
+env/
+bin/
+lib64/
+lib/
+include/
+
+# Байт-код Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Настройки среды
+.env
+
+# Настройки VS Code
+.vscode/
+
+# Базы данных
+*.db
+*.sqlite3
+postgres_data/
+rabbitmq_data/
+
+# Прочее
+.DS_Store
+Thumbs.db
