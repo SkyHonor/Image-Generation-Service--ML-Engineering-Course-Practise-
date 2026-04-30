@@ -9,7 +9,7 @@
 *   **Frontend**: HTML5, Bootstrap 5, Vanilla JS, Server-Side Rendering (Jinja2)
 *   **Инфраструктура**: Docker, Docker Compose
 *   **Тестирование**: Pytest, FastAPI TestClient
-*   **ML Интеграция**: Google GenAI SDK
+*   **ML Интеграция**: Google Nano Banana
 
 ## 🚀 Архитектура системы
 1.  **FastAPI (Publisher)** принимает запросы от пользователей (через Web UI или Swagger), списывает кредиты с баланса и публикует задачу в RabbitMQ.
