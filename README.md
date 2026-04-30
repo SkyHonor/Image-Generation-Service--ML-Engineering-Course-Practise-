@@ -1,6 +1,6 @@
 # 🍌 Nano Banana ML - Image Generation Service
 
-Полноценный асинхронный микросервис для генерации изображений с помощью нейросетей (Google Gemini 3.1 Flash), построенный на микросервисной архитектуре с использованием брокера сообщений.
+Полноценный асинхронный микросервис для генерации изображений с помощью нейросетей (Google Gemini Image 3.1 Flash), построенный на микросервисной архитектуре с использованием брокера сообщений.
 
 ## 🛠 Технологический стек
 *   **Backend API**: FastAPI, Pydantic, Python 3.10+
@@ -9,7 +9,7 @@
 *   **Frontend**: HTML5, Bootstrap 5, Vanilla JS, Server-Side Rendering (Jinja2)
 *   **Инфраструктура**: Docker, Docker Compose
 *   **Тестирование**: Pytest, FastAPI TestClient
-*   **ML Интеграция**: Google Nano Banana
+*   **ML Интеграция**: Google Nano Banana (Gemini Image 3.1 Flash)
 
 ## 🚀 Архитектура системы
 1.  **FastAPI (Publisher)** принимает запросы от пользователей (через Web UI или Swagger), списывает кредиты с баланса и публикует задачу в RabbitMQ.
